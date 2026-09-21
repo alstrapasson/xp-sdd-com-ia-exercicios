@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+.coverage
+htmlcov/
+
+# Ambiente e credenciais — nada disto entra num repositório público
+.env
+.env.*
+*.pem
+*.key
+ambiente-*.json
+
+# Entregas dos participantes: ficam com cada um, nunca aqui
+entregas/
+resultados/
+registro-kata-*-preenchido.md
+
+# Editores e SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

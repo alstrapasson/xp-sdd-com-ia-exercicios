@@ -1,0 +1,80 @@
+# TEMPLATE — ~/.codex/config.toml
+# Capacitação XP + SDD com IA (Codex) · Strapa Tecnologia
+#
+# Dois dials INDEPENDENTES, e confundi-los é o erro clássico:
+#
+#   sandbox_mode     = o ESTRAGO que você aceita
+#   approval_policy  = a INTERRUPÇÃO que você aguenta
+#
+# Nunca resolva incômodo de aprovação afrouxando o sandbox. São problemas diferentes.
+#
+# Uso:  codex --profile exploracao
+
+# ---------------------------------------------------------------------------------------
+# Padrão — vale quando nenhum perfil é escolhido
+# ---------------------------------------------------------------------------------------
+
+model = "gpt-5-codex"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "medium"
+
+# ---------------------------------------------------------------------------------------
+# Perfis por tipo de tarefa
+# ---------------------------------------------------------------------------------------
+
+# Entender o código, mapear impacto, ler antes de decidir.
+# read-only + never é a combinação mais confortável E mais segura ao mesmo tempo:
+# não pergunta nada porque não pode estragar nada.
+[profiles.exploracao]
+sandbox_mode = "read-only"
+approval_policy = "never"
+model_reasoning_effort = "low"
+
+# Escrever código contra um plano aprovado.
+[profiles.implementacao]
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+model_reasoning_effort = "medium"
+
+# Ler diff, procurar desvio em relação à spec, achar o que não foi pedido.
+# Esforço alto porque a tarefa é de julgamento; read-only porque revisor não edita.
+[profiles.revisao]
+sandbox_mode = "read-only"
+approval_policy = "on-request"
+model_reasoning_effort = "high"
+
+# Sessões que consomem conteúdo NÃO CONFIÁVEL: issues, PRs de terceiros, respostas MCP,
+# páginas web. Conteúdo externo é entrada não confiável — trate como tal.
+[profiles.triagem]
+sandbox_mode = "read-only"
+approval_policy = "untrusted"
+model_reasoning_effort = "low"
+
+# ---------------------------------------------------------------------------------------
+# Servidores MCP
+# ---------------------------------------------------------------------------------------
+#
+# ANTES DE ADICIONAR QUALQUER SERVIDOR DE TERCEIRO:
+#   [ ] Origem identificável, mantenedor conhecido
+#   [ ] Fixado em versão — nunca "latest"
+#   [ ] Escopo da credencial é o mínimo necessário
+#   [ ] Segundo par de olhos revisou
+#
+# Servidor MCP de terceiro é CÓDIGO EXECUTANDO NA SUA MÁQUINA, não texto sendo lido.
+# Ver 06-playbooks/governanca-e-seguranca.md
+
+# [mcp_servers.jira]
+# command = "npx"
+# args = ["-y", "@empresa/mcp-jira@1.4.2"]
+# env = { JIRA_URL = "https://empresa.atlassian.net" }
+
+# ---------------------------------------------------------------------------------------
+# NUNCA em repositório com credencial válida
+# ---------------------------------------------------------------------------------------
+#
+# [profiles.qualquer]
+# sandbox_mode = "danger-full-access"    # <- o modo de quem aceita qualquer estrago
+#
+# Se você precisou disto, o problema quase sempre é outro: sandbox mal dimensionado para a
+# tarefa, ou tarefa mal delimitada. Resolva a causa.

@@ -1,0 +1,13 @@
+[project]
+name = "manutencao-api"
+version = "0.3.0"
+description = "Reposit\u00f3rio de laborat\u00f3rio - Capacita\u00e7\u00e3o XP + SDD com IA (Codex)"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "pydantic>=2.8"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

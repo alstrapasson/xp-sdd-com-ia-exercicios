@@ -8,12 +8,25 @@ venv/
 .coverage
 htmlcov/
 
+# NUNCA — material de instrutor. Se qualquer um destes for commitado, o kata deixa de
+# medir e não há desfazer: o que entra no histórico de um repositório público fica lá.
+# Isto é rede de segurança, não permissão — o lugar de trabalhar o kata é FORA deste clone.
+tests_ocultos/
+**/tests_ocultos/
+*oculto*.py
+gabarito*
+corrigir.py
+calcular_delta.py
+**/referencia/
+
 # Ambiente e credenciais — nada disto entra num repositório público
 .env
 .env.*
 *.pem
 *.key
 ambiente-*.json
+verificacao-ambiente-*.json
+verificar-ambiente-*.json
 
 # Entregas dos participantes: ficam com cada um, nunca aqui
 entregas/

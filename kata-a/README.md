@@ -71,7 +71,7 @@ tests/
 Rode os testes com:
 
 ```bash
-python -m pytest -q
+python -m pytest
 ```
 
 ---

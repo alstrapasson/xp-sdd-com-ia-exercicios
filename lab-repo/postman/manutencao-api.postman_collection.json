@@ -1,0 +1,686 @@
+{
+  "info": {
+    "name": "API de Manutenção — Lab 01 (reabertura de ordem)",
+    "description": "Rode a pasta '1. Demo reabertura' com o Collection Runner, na ordem. Requer a API em execução (uvicorn app.main:app --reload).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "ordemId",
+      "value": ""
+    },
+    {
+      "key": "prazoOriginal",
+      "value": ""
+    },
+    {
+      "key": "ordemCanceladaId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Básicos",
+      "item": [
+        {
+          "name": "Saúde",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/saude",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saude"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar equipamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipamentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "equipamentos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar ordens (ordenadas por prioridade)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar ordens filtrando status=concluida",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens?status=concluida",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens?status=concluida"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar ordens do equipamento EQ-1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens?equipamento_id=EQ-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens?equipamento_id=EQ-1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Demo reabertura",
+      "item": [
+        {
+          "name": "1. Abrir ordem (corretiva, EQ-1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipamento_id\": \"EQ-1\",\n  \"tipo\": \"corretiva\",\n  \"descricao\": \"Vazamento recorrente na vedação\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const o = pm.response.json();",
+                  "pm.collectionVariables.set(\"ordemId\", o.id);",
+                  "pm.collectionVariables.set(\"prazoOriginal\", o.prazo);",
+                  "pm.test(\"status aberta, prazo e prioridade calculados\", () => { pm.expect(o.status).to.eql(\"aberta\"); pm.expect(o.prazo).to.be.a(\"string\"); pm.expect(o.prioridade).to.be.within(1, 5); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Reabrir ordem ainda aberta -> 409",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemId}}/reabrir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemId}}",
+                "reabrir"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Concluir ordem",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"concluida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"concluida_em preenchido\", () => pm.expect(pm.response.json().concluida_em).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Reabrir ordem concluída -> 200",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemId}}/reabrir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemId}}",
+                "reabrir"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const o = pm.response.json();",
+                  "pm.test(\"volta para aberta\", () => pm.expect(o.status).to.eql(\"aberta\"));",
+                  "pm.test(\"reaberturas = 1\", () => pm.expect(o.reaberturas).to.eql(1));",
+                  "pm.test(\"concluida_em limpo\", () => pm.expect(o.concluida_em).to.be.null);",
+                  "pm.test(\"prazo recalculado (maior que o original)\", () => pm.expect(new Date(o.prazo) > new Date(pm.collectionVariables.get(\"prazoOriginal\"))).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Reabrir de novo (já está aberta) -> 409",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemId}}/reabrir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemId}}",
+                "reabrir"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Consultar ordem reaberta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"reaberturas persistido\", () => pm.expect(pm.response.json().reaberturas).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Ciclo 2: concluir e reabrir de novo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"concluida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Segunda reabertura -> reaberturas = 2",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemId}}/reabrir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemId}}",
+                "reabrir"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"reaberturas = 2\", () => pm.expect(pm.response.json().reaberturas).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Casos de erro",
+      "item": [
+        {
+          "name": "Reabrir ordem inexistente -> 404",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/OS-99999/reabrir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "OS-99999",
+                "reabrir"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar ordem para cancelar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipamento_id\": \"EQ-1\",\n  \"tipo\": \"corretiva\",\n  \"descricao\": \"Vazamento recorrente na vedação\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"ordemCanceladaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reabrir ordem cancelada -> 409",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemCanceladaId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemCanceladaId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "   ... tentar reabrir a cancelada -> 409",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens/{{ordemCanceladaId}}/reabrir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens",
+                "{{ordemCanceladaId}}",
+                "reabrir"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Abrir ordem com equipamento inexistente -> 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipamento_id\": \"EQ-999\",\n  \"tipo\": \"corretiva\",\n  \"descricao\": \"Vazamento recorrente na vedação\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Abrir ordem com descrição curta -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipamento_id\": \"EQ-1\",\n  \"tipo\": \"corretiva\",\n  \"descricao\": \"quebrou\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

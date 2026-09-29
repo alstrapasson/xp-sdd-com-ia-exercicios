@@ -73,3 +73,62 @@ def test_filtro_por_status(cliente):
     resposta = cliente.get("/ordens", params={"status": "aberta"})
     assert resposta.status_code == 200
     assert all(o["status"] == "aberta" for o in resposta.json())
+
+
+def _ordem_concluida(cliente, equipamento_id="EQ-1"):
+    ordem = cliente.post(
+        "/ordens",
+        json={
+            "equipamento_id": equipamento_id,
+            "tipo": "corretiva",
+            "descricao": "Vazamento recorrente na vedação",
+        },
+    ).json()
+    cliente.patch(f"/ordens/{ordem['id']}/status", json={"status": "concluida"})
+    return ordem["id"]
+
+
+def test_reabrir_ordem_concluida(cliente):
+    ordem_id = _ordem_concluida(cliente)
+    original = repositorio.buscar_ordem(ordem_id)
+    prazo_original = original.prazo
+
+    resposta = cliente.post(f"/ordens/{ordem_id}/reabrir")
+
+    assert resposta.status_code == 200
+    corpo = resposta.json()
+    assert corpo["status"] == "aberta"
+    assert corpo["reaberturas"] == 1
+    assert corpo["concluida_em"] is None
+    assert repositorio.buscar_ordem(ordem_id).prazo > prazo_original
+
+
+def test_reabrir_ordem_recalcula_prioridade(cliente):
+    ordem_id = _ordem_concluida(cliente, "EQ-2")
+    antes = repositorio.buscar_ordem(ordem_id).prioridade
+
+    corpo = cliente.post(f"/ordens/{ordem_id}/reabrir").json()
+
+    assert corpo["prioridade"] <= antes
+
+
+def test_reabrir_ordem_nao_concluida_retorna_409(cliente):
+    ordem_id = next(iter(repositorio.ordens))
+    status_antes = repositorio.buscar_ordem(ordem_id).status
+
+    resposta = cliente.post(f"/ordens/{ordem_id}/reabrir")
+
+    assert resposta.status_code == 409
+    assert repositorio.buscar_ordem(ordem_id).status == status_antes
+    assert repositorio.buscar_ordem(ordem_id).reaberturas == 0
+
+
+def test_reabrir_ordem_cancelada_retorna_409(cliente):
+    ordem_id = next(iter(repositorio.ordens))
+    repositorio.buscar_ordem(ordem_id).status = "cancelada"
+
+    assert cliente.post(f"/ordens/{ordem_id}/reabrir").status_code == 409
+
+
+def test_reabrir_ordem_inexistente_retorna_404(cliente):
+    assert cliente.post("/ordens/OS-99999/reabrir").status_code == 404

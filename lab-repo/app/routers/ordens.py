@@ -67,3 +67,25 @@ def atualizar_status(ordem_id: str, dados: AtualizacaoStatus) -> OrdemServico:
     if dados.status == StatusOrdem.CONCLUIDA:
         ordem.concluida_em = datetime.now(timezone.utc)
     return ordem
+
+
+@router.post("/{ordem_id}/reabrir", response_model=OrdemServico)
+def reabrir_ordem(ordem_id: str) -> OrdemServico:
+    ordem = repositorio.buscar_ordem(ordem_id)
+    if ordem is None:
+        raise HTTPException(status_code=404, detail="Ordem não encontrada")
+
+    if ordem.status != StatusOrdem.CONCLUIDA:
+        raise HTTPException(status_code=409, detail="Somente ordem concluída pode ser reaberta")
+
+    equipamento = repositorio.buscar_equipamento(ordem.equipamento_id)
+    if equipamento is None:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado")
+
+    reaberta_em = datetime.now(timezone.utc)
+    ordem.status = StatusOrdem.ABERTA
+    ordem.reaberturas += 1
+    ordem.concluida_em = None
+    ordem.prazo = sla.calcular_prazo(reaberta_em, equipamento.criticidade, ordem.tipo)
+    ordem.prioridade = priorizacao.calc(ordem, equipamento)
+    return ordem

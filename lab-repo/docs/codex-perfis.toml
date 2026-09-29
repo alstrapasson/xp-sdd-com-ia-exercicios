@@ -1,0 +1,26 @@
+# Perfis do Codex — Laboratório 2 (Dia 2)
+#
+# Cópia versionada dos perfis acrescentados a ~/.codex/config.toml. Auditada na Sessão 1 da
+# mentoria. Uso: codex --profile exploracao
+#
+# Sandbox = o estrago que se aceita. Aprovação = a interrupção que se aguenta.
+# Nunca resolva incômodo de aprovação afrouxando o sandbox.
+
+# Mapear o código e ler antes de decidir. Só lê, então não há o que estragar nem o que perguntar.
+[profiles.exploracao]
+sandbox_mode = "read-only"
+approval_policy = "never"
+model_reasoning_effort = "low"
+
+# Implementar contra uma spec aprovada. Precisa escrever em app/ e tests/, e comando fora do
+# padrão pede aprovação.
+[profiles.implementacao]
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+model_reasoning_effort = "medium"
+
+# Revisar o diff contra a spec. Quem revisa não edita; esforço alto porque a tarefa é de julgamento.
+[profiles.revisao]
+sandbox_mode = "read-only"
+approval_policy = "on-request"
+model_reasoning_effort = "high"

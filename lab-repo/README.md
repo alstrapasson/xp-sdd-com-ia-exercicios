@@ -20,10 +20,13 @@ python -m venv .venv
 pip install -e ".[dev]"
 
 uvicorn app.main:app --reload    # API em http://127.0.0.1:8000
-pytest                            # 12 testes
+pytest                            # 17 testes
 ```
 
 Documentação interativa em `http://127.0.0.1:8000/docs`.
+
+A referência em Markdown, com exemplos de requisição, resposta e erros, está em
+[`docs/endpoints.md`](docs/endpoints.md).
 
 > Se aparecer `StarletteDeprecationWarning` sobre `httpx`, ignore: é um aviso da versão do
 > TestClient instalada, não afeta os laboratórios.

@@ -1,0 +1,26 @@
+# .codex/config.toml — escopo do projeto (vale para projeto marcado como confiável).
+# Integração com o Jira (site alstrapasson.atlassian.net, projeto KAN) pelo servidor remoto da
+# Atlassian. Login por OAuth: nenhum token neste arquivo. Passo a passo em docs/jira-setup.md.
+
+[mcp_servers.atlassian]
+# ?tools=all expõe as ferramentas individuais (sem isso o servidor usa modo de descoberta, e a
+# allowlist abaixo não teria o que filtrar).
+url = "https://mcp.atlassian.com/v2/mcp?tools=all"
+
+# Allowlist: só o que os skills jira-* usam. Falha fechada: nome que não existir na versão do
+# servidor simplesmente não aparece. Confira com /mcp depois do login.
+enabled_tools = [
+  "getAccessibleAtlassianResources",
+  "getJiraIssue",
+  "searchJiraIssuesUsingJql",
+  "getTransitionsForJiraIssue",
+  "addCommentToJiraIssue",
+  "transitionJiraIssue",
+]
+
+# Toda escrita no Jira passa por aprovação humana.
+[mcp_servers.atlassian.tools.addCommentToJiraIssue]
+approval_mode = "prompt"
+
+[mcp_servers.atlassian.tools.transitionJiraIssue]
+approval_mode = "prompt"
